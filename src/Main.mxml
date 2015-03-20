@@ -2,10 +2,89 @@
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
                        xmlns:s="library://ns.adobe.com/flex/spark"
                        xmlns:mx="library://ns.adobe.com/flex/mx"
-					   showStatusBar="false">
-	
+					   xmlns:views="mvc.views.*"
+					   showStatusBar="false"
+					   initialize="onInit()"
+					   addedToStage="onStage()">
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center" verticalAlign="middle" />
+	</s:layout>
+	<s:states>
+		<s:State name="default"/>
+		<s:State name="loading_state"/>
+		<s:State name="quiz_ready_state"/>
+		<s:State name="quiz_finish_state"/>
+		<s:State name="intro_state"/>
+		<s:State name="screensaver_state"/>
+	</s:states>
+	<fx:Script>
+		<![CDATA[
+		import robotlegs.bender.framework.api.IContext;
+		import bundles.MVCSBundleNoTraceLog;
+		import robotlegs.bender.extensions.contextView.ContextView;
+		import robotlegs.bender.framework.impl.Context;
+		import flash.events.KeyboardEvent;
+		import flash.ui.Keyboard;
+		import mvc.views.SettingsView;
+
+		protected var context:IContext;
+		private var settingsPop:SettingsView;
+		
+		private function onInit():void
+		{
+			//setup context
+			context = Context(new Context()
+				.install(MVCSBundleNoTraceLog)
+				.configure(new MainViewConfig())
+				.configure(new ContextView(this)));
+				
+			currentState = "default";
+		}
+		
+		private function onStage():void
+		{
+			this.stage.addEventListener(KeyboardEvent.KEY_UP, _onKeyUp);
+		}
+		
+		private function _onKeyUp(e:KeyboardEvent):void
+		{
+			switch(e.keyCode)
+			{
+				case 192://~
+					toggleSettings();
+					break;
+			}
+		}
+		
+		private function toggleSettings():void
+		{
+			if (!settingsPop)
+			{
+				settingsPop = new SettingsView();
+			}
+			
+			settingsPop.isShown ? settingsPop.hide() : settingsPop.show(this);
+		}
+		
+		]]>
+	</fx:Script>
+	<fx:Style>
+        @namespace s "library://ns.adobe.com/flex/spark";
+        @namespace mx "library://ns.adobe.com/flex/mx";
+        s|WindowedApplication{
+            backgroundColor:#CCCCCC;
+			modalTransparency:1;
+			modalTransparencyBlur:0;
+			modalTransparencyColor:#CCCCCC;
+        }
+    </fx:Style>
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
-	
+	<views:Contents includeIn="default"/>
+	<mx:ProgressBar indeterminate="true" label="Загрузка" includeIn="loading_state"/>
+	<views:Quiz includeIn="quiz_ready_state"/>
+	<views:ScoreScreen includeIn="quiz_finish_state"/>
+	<views:IntroView width="100%" height="100%" includeIn="intro_state"/>
+	<views:ScreenSaverView width="100%" height="100%" includeIn="screensaver_state"/>
 </s:WindowedApplication>
